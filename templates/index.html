@@ -1,0 +1,73 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Movie Genre Classifier</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { background: #f5f5f5; padding: 20px; border-radius: 10px; }
+        textarea { width: 100%; height: 150px; margin: 10px 0; padding: 10px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 15px; background: white; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Movie Genre Classifier</h1>
+        <p>Enter a movie plot and get the predicted genre:</p>
+        
+        <textarea id="plot" placeholder="Enter movie plot here..."></textarea>
+        <br>
+        <button onclick="predictGenre()">Predict Genre</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function predictGenre() {
+            const plot = document.getElementById('plot').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!plot.trim()) {
+                resultDiv.innerHTML = '<p class="error">Please enter a movie plot.</p>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ plot: plot })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let html = `<h3>Prediction Results:</h3>`;
+                    html += `<p><strong>Predicted Genre:</strong> <span class="success">${data.predicted_genre}</span></p>`;
+                    html += `<p><strong>Confidence:</strong> ${(data.confidence * 100).toFixed(2)}%</p>`;
+                    html += `<h4>Top 5 Genres:</h4><ul>`;
+                    data.all_probabilities.forEach(([genre, prob]) => {
+                        html += `<li>${genre}: ${(prob * 100).toFixed(2)}%</li>`;
+                    });
+                    html += `</ul>`;
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">Error: ${data.error}</p>`;
+                }
+                
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                resultDiv.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

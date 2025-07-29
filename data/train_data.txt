@@ -1,0 +1,3 @@
+# This file will contain training data for the movie classification model
+# The actual training data will be generated when running train_model.py
+# Format: plot,genre 
